@@ -477,20 +477,11 @@ def clean(file_path_or_bytes, enabled_rules: dict = None) -> Tuple[openpyxl.Work
         raise ValueError("❌ 工作表中没有数据行（仅包含表头），无法清洗。")
 
     # ============================================================
-    # 4d: 深拷贝工作簿（保存→重新加载，避免修改原文件）
+    # 4d: 直接使用已加载的工作簿（数据源已在内存中，修改不影响原始文件）
     # ============================================================
-    temp_bytes = io.BytesIO()
-    source_wb.save(temp_bytes)
-    temp_bytes.seek(0)
-    cleaned_wb = openpyxl.load_workbook(temp_bytes, data_only=True)
-    cleaned_ws = cleaned_wb[SHEET_NAME]
-
-    # 获取清洗用表的列号
-    cleaned_headers = _read_headers(cleaned_ws)
-    cleaned_cols = {}
-    for col_name in REQUIRED_COLUMNS:
-        idx = _find_column_index(cleaned_headers, col_name)
-        cleaned_cols[col_name] = idx
+    cleaned_wb = source_wb
+    cleaned_ws = ws
+    cleaned_cols = column_indices
 
     # ============================================================
     # 4e: 执行 6 条清洗规则，收集异常
